@@ -1,0 +1,10 @@
+tenant:
+  multitenancy:
+    is-multitenant: ${TENANT_IS_MULTITENANT:true}
+    default-tenant-code: default
+    support-expansion-tenant: ${TENANT_SUPPORT_EXPANSION:true}
+  interceptor:
+    client-claims-prefix: client_
+    white-listed-clients: [ ]
+    enforce-trusted-tenant: false
+    white-listed-endpoints: [ '/principal/me' ]

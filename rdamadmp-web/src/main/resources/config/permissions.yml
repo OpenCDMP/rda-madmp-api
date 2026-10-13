@@ -1,0 +1,94 @@
+permissions:
+  policies:
+    DeferredAffiliation:
+      roles:
+        - TenantAdmin
+        - TenantUser
+      clients: [ ]
+      allowAnonymous: false
+      allowAuthenticated: false
+    # Tenants
+    BrowseTenant:
+      roles: [ ]
+      clients: [ ]
+      allowAnonymous: false
+      allowAuthenticated: false
+    EditTenant:
+      roles: [ ]
+      clients: [ "${OPENCDMP_QUEUE_APP_ID}" ]
+      allowAnonymous: false
+      allowAuthenticated: false
+    DeleteTenant:
+      roles: [ ]
+      claims: [ ]
+      clients: [ "${OPENCDMP_QUEUE_APP_ID}" ]
+      allowAnonymous: false
+      allowAuthenticated: false
+    AllowNoTenant:
+      roles:
+        - Admin
+      claims: [ ]
+      clients: [ ]
+      allowAnonymous: false
+      allowAuthenticated: false
+    # Users
+    BrowseUser:
+      roles:
+        - Admin
+      clients: [ ]
+      allowAnonymous: false
+      allowAuthenticated: false
+    EditUser:
+      roles: [ ]
+      clients: [ "${OPENCDMP_QUEUE_APP_ID}" ]
+      allowAnonymous: false
+      allowAuthenticated: false
+    DeleteUser:
+      roles: [ ]
+      claims: [ ]
+      clients: [ "${OPENCDMP_QUEUE_APP_ID}" ]
+      allowAnonymous: false
+      allowAuthenticated: false
+    # DMP
+    BrowseRdaDmp:
+      roles:
+        - Admin
+        - TenantAdmin
+      dmp:
+        roles:
+          - Owner
+      clients: [ ]
+      allowAnonymous: false
+      allowAuthenticated: false
+    EditRdaDmp:
+      roles:
+        - Admin
+        - TenantAdmin
+      dmp:
+        roles:
+          - Owner
+      clients: [ "${OPENCDMP_QUEUE_APP_ID}" ]
+      allowAnonymous: false
+      allowAuthenticated: false
+    NewRdaDmp:
+      roles:
+        - Admin
+        - InstallationAdmin
+        - TenantPlanManager
+        - TenantConfigManager
+        - TenantAdmin
+        - TenantUser
+        - User
+      clients: [ "${OPENCDMP_QUEUE_APP_ID}" ]
+      allowAnonymous: false
+      allowAuthenticated: false
+    DeleteRdaDmp:
+      roles:
+        - Admin
+        - TenantAdmin
+      dmp:
+        roles:
+          - Owner
+      clients: [ "${OPENCDMP_QUEUE_APP_ID}" ]
+      allowAnonymous: false
+      allowAuthenticated: false

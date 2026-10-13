@@ -1,0 +1,10 @@
+---
+cluster.name: madmp-cluster
+network.host: 0.0.0.0
+
+discovery.type: single-node
+node.name: elasticsearch
+
+xpack.license.self_generated.type: basic
+xpack.security.enabled: true
+ingest.geoip.downloader.enabled: false

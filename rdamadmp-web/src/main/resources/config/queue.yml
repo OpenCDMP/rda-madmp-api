@@ -1,0 +1,69 @@
+spring:
+  rabbitmq:
+    host: ${RABBIT_HOST}
+    port: ${RABBIT_PORT}
+    username: ${RABBIT_USER}
+    password: ${RABBIT_PASS}
+    ssl:
+      enabled: false
+queue:
+  rabbitmq:
+    enable: ${QUEUE_ENABLED:true}
+    appId: ${QUEUE_APP_ID}
+    durable: true
+    queue: ${QUEUE_NAME}
+    exchange: ${QUEUE_EXCHANGE}
+    listenerEnabled: ${QUEUE_ENABLED:true}
+    publisherEnabled: ${QUEUE_ENABLED:true}
+    #TODO
+    connection-recovery:
+      enable: true
+      network-recovery-interval: 5000
+      unreachable-recovery-interval: 5000
+  task:
+    publisher:
+      enable: ${QUEUE_ENABLED:true}
+      options:
+        exchange: ${QUEUE_EXCHANGE}
+        dmp-touch-topic: dmp.touch
+        handleAckRetries: 3
+        handleNackRetries: 3
+        handleAckWaitInMilliSeconds: 50
+        handleNackWaitInMilliSeconds: 50
+      rabbitmq:
+        enable: ${QUEUE_ENABLED:true}
+        interval-seconds: 3
+        options:
+          retry-threashold: 10
+          retry-delay-step-seconds: 300
+          max-retry-delay-seconds: 10800
+          too-old-to-send-seconds: 604800
+          confirm-timeout-seconds: 30
+    listener:
+      enable: ${QUEUE_ENABLED:true}
+      options:
+        exchange: ${QUEUE_EXCHANGE}
+        tenant-removal-topic: tenant.remove
+        tenant-touch-topic: tenant.touch
+        user-removal-topic: user.remove
+        user-touch-topic: user.touch
+        plan-touch-topic: plan.touch
+        plan-removal-topic: plan.remove
+      rabbitmq:
+        enable: ${QUEUE_ENABLED:true}
+        interval-seconds: 3
+        options:
+          retry-threashold: 10
+          retry-delay-step-seconds: 300
+          max-retry-delay-seconds: 10800
+          too-old-to-send-seconds: 604800
+    cleanup:
+      enable: ${QUEUE_ENABLED:true}
+      intervalSeconds: 86400
+      startTimeSeconds: 3600
+      batchSize: 500
+      retentionDays: 10
+      queueInboxStatus:
+        - SUCCESSFUL
+      queueOutboxStatus:
+        - CONFIRMED

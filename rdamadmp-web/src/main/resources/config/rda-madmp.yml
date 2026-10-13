@@ -1,0 +1,3 @@
+rda-madmp:
+  transformerId: "rda-madmp"
+  useActionType: ${RDA_MADMP_APPLY_INTEGRATION_ACTION:false}

@@ -1,0 +1,19 @@
+elastic:
+  enabled: true
+  hosts:
+    - ${ELASTIC_HOST}
+  username: ${ELASTIC_USER}
+  password: ${ELASTIC_PASS}
+  useSSL: ${ELASTIC_USE_SSL}
+  socketTimeoutMillis: 30000
+  connectTimeoutMillis: 30000
+  defaultResultSize: 100
+  defaultCollectAllResultSize: 1000
+  defaultScrollSize: 100
+  defaultScrollSeconds: 120
+  defaultCompositeAggregationResultSize: 200000
+  disableHostnameVerifier: false
+app-elastic:
+  rdaIndexName: ${ELASTIC_RDA_INDEX}
+  enableIcuAnalysisPlugin: true
+  resetBatchSize: 1000

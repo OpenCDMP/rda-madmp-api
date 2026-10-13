@@ -1,0 +1,17 @@
+springdoc:
+  apiDocs:
+    path: "/v3/api-docs"
+    groups:
+      enabled: true
+  swaggerUi:
+    path: /swagger-ui
+    enabled: true
+    useRootPath: true
+    docExpansion: none
+    oauth2RedirectUrl: ${SWAGGER_AUTH_REDIRECT_URL}
+    operationsSorter: alpha
+    tagsSorter: alpha
+    oauth:
+      clientId: ${SWAGGER_AUTH_CLIENT_ID}
+swagger-config:
+  serverUrl: ${SWAGGER_SERVER_URL}

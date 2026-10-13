@@ -1,0 +1,16 @@
+.idea/
+*.iml
+*.class
+*.tar
+*.gz
+*.jar
+*.lst
+# Eclipse
+.project
+.settings/
+bin/
+*.classpath
+.run
+logs/
+
+deployment/storage/

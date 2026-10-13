@@ -1,0 +1,53 @@
+services:
+############################## PROXY ########################################
+  madmp.proxy:
+      container_name: madmp.proxy
+      image: nginx:${PROXY_TAG}
+      depends_on:
+        madmp.backend:
+          condition: service_started
+
+############################## MADMP APP #################################
+
+  madmp.backend:
+    container_name: madmp.backend
+    image: opencdmp/rda-madmp-api:${MAIN_APP_TAG}
+    depends_on:
+      madmp.postgres:
+        condition: service_healthy
+      madmp.keycloak:
+        condition: service_healthy
+      madmp.elasticsearch:
+        condition: service_healthy
+      madmp.rabbitmq:
+        condition: service_healthy
+
+############################## POSTGRES ############################################
+  madmp.postgres:
+    container_name: madmp.postgres
+    image: postgres:${POSTGRES_TAG}
+
+################################# ELASTICSEARCH #################################################
+  madmp.elasticsearch.setup:
+    container_name: madmp.elasticsearch.setup
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_TAG}
+    depends_on:
+      madmp.elasticsearch:
+        condition: service_healthy
+
+  madmp.elasticsearch:
+    container_name: madmp.elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_TAG}
+
+############################# KEYCLOAK ###############################################
+  madmp.keycloak:
+    container_name: madmp.keycloak
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_TAG}
+    depends_on:
+      madmp.postgres:
+        condition: service_healthy
+
+############################## RABBITMQ ###############################################
+  madmp.rabbitmq:
+    container_name: madmp.rabbitmq
+    image: rabbitmq:${RABBITMQ_TAG}

@@ -1,0 +1,63 @@
+package gr.cite.rda.common.validation;
+
+import gr.cite.rda.convention.ConventionService;
+import gr.cite.rda.errorcode.ErrorThesaurusProperties;
+import gr.cite.tools.exception.MyValidationException;
+import gr.cite.tools.validation.AbstractValidator;
+import gr.cite.tools.validation.ValidationResult;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+public abstract class BaseValidator<T> extends AbstractValidator<T> {
+	protected final ConventionService conventionService;
+	protected final ErrorThesaurusProperties errors;
+
+	protected BaseValidator(ConventionService conventionService, ErrorThesaurusProperties errors) {
+		this.conventionService = conventionService;
+		this.errors = errors;
+	}
+	
+	@Override
+	public void validateForce(Object target) {
+		this.validate(target);
+		ValidationResult result = result();
+		if (!result.isValid()) {
+			List<Map.Entry<String, List<String>>> errorsMap = this.flattenValidationResult();
+			throw new MyValidationException(this.errors.getModelValidation().getCode(), errorsMap);
+		}
+	}
+
+	protected Boolean isValidGuid(UUID guid) {
+		return this.conventionService.isValidGuid(guid);
+	}
+
+	protected Boolean isValidHash(String hash) {
+		return this.conventionService.isValidHash(hash);
+	}
+
+	protected Boolean isEmpty(String value) {
+		return this.conventionService.isNullOrEmpty(value);
+	}
+	protected Boolean isListNullOrEmpty(List<?> value) {
+		return this.conventionService.isListNullOrEmpty(value);
+	}
+	protected Boolean isNull(Object value) {
+		return value == null;
+	}
+
+	protected Boolean isNull(Collection<?> value) {
+		return value == null;
+	}
+
+	protected Boolean lessEqualLength(String value, int size) {
+		return value.length() <= size;
+	}
+
+	protected Boolean lessEqual(Integer value, int target) {
+		return value <= target;
+	}
+}
+

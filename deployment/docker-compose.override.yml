@@ -1,0 +1,203 @@
+services:
+############################## PROXY ########################################
+  madmp.proxy:
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '1'
+        reservations:
+          memory: 128M
+          cpus: '0.5'
+    memswap_limit: 512M
+    ports:
+      - "0.0.0.0:${PROXY_APP_PORT}:8081"
+    volumes:
+      - ${CONFIG_FILES_PATH}/proxy/nginx.conf:/etc/nginx/nginx.conf
+      - ${CONFIG_FILES_PATH}/proxy/ProxyNginx.conf:/etc/nginx/conf.d/default.conf
+      - ${LOG_FILES_PATH}/proxy:/tmp/logs
+    networks:
+      - madmp-proxy-network
+
+############################## MADMP APP #################################
+  madmp.backend:
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: '1'
+        reservations:
+          memory: 1024M
+          cpus: '0.5'
+    memswap_limit: 4096M
+    environment:
+      - PROFILE=${PROFILE}
+    expose:
+      - "8080"
+    volumes:
+      - ${CONFIG_FILES_PATH}/madmp/backend/config:/config
+      - ${STORAGE_PATH}/madmp/backend:/storage
+      - ${LOG_FILES_PATH}/madmp/backend:/logs
+    networks:
+      - madmp-proxy-network
+      - madmp-backend-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep UP || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+################################# POSTGRES ####################################
+
+  madmp.postgres:
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: '1'
+        reservations:
+          memory: 1024M
+          cpus: '0.5'
+    memswap_limit: 4096M
+    ports:
+      - "0.0.0.0:${POSTGRES_PORT}:5432"
+    env_file:
+      - ${CONFIG_FILES_PATH}/postgres/postgres.env
+    volumes:
+      - ${STORAGE_PATH}/postgres/data:/var/lib/postgresql/data
+      - ${CONFIG_FILES_PATH}/postgres/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - madmp-backend-network
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d madmp'"]
+      interval: 15s
+      timeout: 60s
+      retries: 5
+
+################################# ELASTICSEARCH #################################################
+  madmp.elasticsearch.setup:
+    user: "0"
+    env_file:
+      - ${CONFIG_FILES_PATH}/elk/elk.env
+    environment:
+      - ELASTIC_PASSWORD=elastic
+    volumes:
+      - ${CONFIG_FILES_PATH}/elk/elasticsearch/index_init.sh:/usr/share/elasticsearch/config/index_init.sh
+    command: >
+      bash -c '
+        if [ x${ELASTIC_PASSWORD} == x ]; then
+          echo "Set the ELASTIC_PASSWORD environment variable in the .env file";
+          exit 1;
+        fi;
+        echo "Setting file permissions"
+        chown -R root:root /usr/share/elasticsearch/config/index_init.sh;
+        chmod 744 /usr/share/elasticsearch/config/index_init.sh;
+        echo "Waiting for Elasticsearch availability";
+        until curl -s http://madmp.elasticsearch:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
+        /usr/share/elasticsearch/config/index_init.sh;
+        echo "All done!";
+      '
+    networks:
+      - madmp-backend-network
+
+  madmp.elasticsearch:
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: '2'
+        reservations:
+          memory: 1024M
+          cpus: '1'
+    memswap_limit: 4096M
+    env_file:
+      - ${CONFIG_FILES_PATH}/elk/elk.env
+    environment:
+      - ES_JAVA_OPTS=-Xmx2g -Xms2g
+    ulimits:
+      nproc: 65535
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ${CONFIG_FILES_PATH}/elk/elasticsearch/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro
+      - ${CONFIG_FILES_PATH}/elk/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - ${STORAGE_PATH}/elasticsearch:/usr/share/elasticsearch/data
+      - ${LOG_FILES_PATH}/elasticsearch:/usr/share/elasticsearch/logs
+    expose:
+      - "9200"
+    networks:
+      - madmp-backend-network
+    healthcheck:
+      test: curl -s http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+#################################### KEYCLOAK ###############################################
+  madmp.keycloak:
+    restart: unless-stopped
+    command: ["start-dev", "--log=console,file", "--log-file=/tmp/logs/keycloak.log", "--import-realm"]
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: '1'
+        reservations:
+          memory: 1024M
+          cpus: '0.5'
+    memswap_limit: 4096M
+    env_file:
+      - ${CONFIG_FILES_PATH}/keycloak/keycloak.env
+    environment:
+      - JAVA_OPTS_APPEND="-Djava.net.preferIPv4Stack=true"
+    volumes:
+      - ${LOG_FILES_PATH}/keycloak:/tmp/logs
+      - ${CONFIG_FILES_PATH}/keycloak/user_init.sh:/tmp/user_init.sh
+      - ${CONFIG_FILES_PATH}/keycloak/health-check.sh:/tmp/health-check.sh
+      - ${CONFIG_FILES_PATH}/keycloak/imports/madmp-realm.json:/opt/keycloak/data/import/madmp-realm.json
+    expose:
+      - "8080"
+    healthcheck:
+      test: curl -s http://localhost:8080/realms/master >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      interval: 30s
+      retries: 5
+      timeout: 10s
+    networks:
+      - madmp-proxy-network
+      - madmp-backend-network
+
+################################# RABBITMQ ###############################################
+  madmp.rabbitmq:
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    memswap_limit: 1024M
+    restart: unless-stopped
+    expose:
+      - "5672"
+    env_file:
+      - ${CONFIG_FILES_PATH}/rabbitmq/rabbitmq.env
+    volumes:
+      - ${STORAGE_PATH}/rabbitmq:/var/lib/rabbitmq/mnesia
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+      - madmp-backend-network
+
+networks:
+  madmp-proxy-network:
+  madmp-backend-network:

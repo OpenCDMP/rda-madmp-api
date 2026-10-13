@@ -1,0 +1,23 @@
+error-thesaurus:
+# common errors start with 1..
+  hash-conflict:
+    code: 100
+    message: there is a hash conflict for the item modified. please reload to get the latest changes
+  forbidden:
+    code: 101
+    message: insufficient rights
+  system-error:
+    code: 102
+    message: an unexpected system error occurred
+  missing-tenant:
+    code: 103
+    message: tenant scope not provided
+  model-validation:
+    code: 106
+    message: validation error
+  tenant-not-allowed:
+    code: 112
+    message: tenant not allowed
+  tenant-tampering:
+    code: 127
+    message: Tenant tampering
